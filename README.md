@@ -145,10 +145,11 @@ DISREP Daily Report/
 
 | Detail | Information |
 |---|---|
-| **Client** | MOJEC International Limited |
+| **Client** | KEDCO |
 | **Project** | DISREP Metering — Kano, Katsina, Jigawa |
 | **Contractor** | Sanxing |
-| **Scale** | 42,000+ meter installations |
+| **Sub Contractor** | Mojec INternational Limited |
+| **Scale** | 128,000+ meter installations |
 | **My Role** | Technical Operations & Data Analyst |
 | **Built by** | Haruna Idris |
 
