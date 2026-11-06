@@ -120,15 +120,91 @@ df_surv['Update Month']=df_surv['Update Time'].dt.month
 df_surv['Update Year']=df_surv['Update Time'].dt.year
 for col in ['Work Order Status','Team Name','Feeder Name']:
     df_surv[col]=df_surv[col].astype(str).str.strip()
-
+    
 # ── REGION DETECTION ──────────────────────────────────────────────────────────
-JIGAWA_KW =['birnin kudu','sani abacha','takur','government house','school of nursing']
-KATSINA_KW=['jibia','hassan usman','low cost','dandagoro']
+
+KATSINA_FEEDERS = [
+    "11KV GALADIMA",
+    "11KV JABIRI",
+    "11KV LOW COST",
+    "11KV NAKOWA",
+    "11KV TOWN",
+    "33KV DUTSENSMA",
+    "11 KV DANDAGORO",
+    "11KV BCGA",
+    "11KV DANDAGORO",
+    "11KV Dutsen Reme",
+    "11KV Dutsen Safe",
+    "11KV FMC",
+    "11KV Galadima",
+    "11KV GRA",
+    "11KV Hassan Usman Road",
+    "11KV JABIRI",
+    "11KV Kano road",
+    "11KV LOW COST",
+    "11KV M/DIKKO",
+    "11KV Muhammed Dikko",
+    "11KV Nakowa",
+    "11KV Town",
+    "33KV DUTSEN-MA",
+    "33kv Jibia feeder",
+    "33KV Kaita",
+    "33KV MUSAWA",
+    "33KV POLYTECHNIC",
+]
+KATSINA_KW = [
+    "katsina",
+    "kats",
+    "kts",
+]
+JIGAWA_FEEDERS = [
+    "11KV SANI ABACHA WAY",
+    "33KV GAGARAWA",
+    "11KV GARU",
+    "11KV GOVERNMENT HOUSE",
+    "11KV Jamaare",
+    "11KV Lautai",
+    "11kv limawa",
+    "11KV Maje",
+    "11KV Makwalla",
+    "11KV Nakowa",
+    "11kv Nuhu Sunusi",
+    "11KV Sani Abacha Way",
+    "11KV Snagari",
+    "11KV TAKUR",
+    "33KV BIRNI KUDU",
+    "33KV Birnin Kudu",
+    "33KV Dantanoma",
+    "33KV Gagarawa",
+    "33KV Gujungu",
+    "33KV Kafin Hausa",
+    "DUTSEN MAIDODO",
+]
+JIGAWA_KW = [
+    "jigawa",
+    "jig",
+    "jgw",
+]
+
+def normalize_name(value):
+    return str(value).strip().lower() if pd.notna(value) else ''
+
 
 def get_region(f):
-    fl=str(f).lower()
-    if any(k in fl for k in JIGAWA_KW):  return 'Jigawa'
-    if any(k in fl for k in KATSINA_KW): return 'Katsina'
+    fl = normalize_name(f)
+    if not fl:
+        return 'Kano'
+
+    if any(k in fl for k in JIGAWA_KW):
+        return 'Jigawa'
+    if any(k in fl for k in KATSINA_KW):
+        return 'Katsina'
+
+    if any(normalize_name(name) in fl for name in JIGAWA_FEEDERS):
+        return 'Jigawa'
+    if any(normalize_name(name) in fl for name in KATSINA_FEEDERS):
+        return 'Katsina'
+
     return 'Kano'
 
 df_inst['Region']=df_inst['Feeder Name'].apply(get_region)
@@ -142,18 +218,26 @@ df_id=df_inst[df_inst['Work Order Status'].isin(DONE)]
 df_it=df_id[df_id['Upload Date']==REPORT_DATE]
 df_ia=df_inst[df_inst['Work Order Status']=='Assigned']
 
+report_year = REPORT_DATE.year
 im={}
 im['done_so_far']        =len(df_id)
 im['confirmed']          =sc(df_inst['Work Order Status']=='Confirmed')
 im['to_be_confirm']      =sc(df_inst['Work Order Status']=='To Be Confirmed')
 im['rejected']           =sc(df_inst['Work Order Status']=='Rejected')
-im['nov']=sc((df_id['Upload Month']==11)&(df_id['Upload Year']==2025))
-im['dec']=sc((df_id['Upload Month']==12)&(df_id['Upload Year']==2025))
-im['jan']=sc((df_id['Upload Month']==1) &(df_id['Upload Year']==2026))
-im['feb']=sc((df_id['Upload Month']==2) &(df_id['Upload Year']==2026))
-im['mar']=sc((df_id['Upload Month']==3) &(df_id['Upload Year']==2026))
-im['apr']=sc((df_id['Upload Month']==4) &(df_id['Upload Year']==2026))
-im['may']=sc((df_id['Upload Month']==5) &(df_id['Upload Year']==2026))
+im['jan']=sc((df_id['Upload Month']==1) &(df_id['Upload Year']==report_year))
+im['feb']=sc((df_id['Upload Month']==2) &(df_id['Upload Year']==report_year))
+im['mar']=sc((df_id['Upload Month']==3) &(df_id['Upload Year']==report_year))
+im['apr']=sc((df_id['Upload Month']==4) &(df_id['Upload Year']==report_year))
+im['may']=sc((df_id['Upload Month']==5) &(df_id['Upload Year']==report_year))
+im['june']=sc((df_id['Upload Month']==6) &(df_id['Upload Year']==report_year))
+im['july']=sc((df_id['Upload Month']==7) &(df_id['Upload Year']==report_year))
+im['aug']=sc((df_id['Upload Month']==8) &(df_id['Upload Year']==report_year))
+im['sep']=sc((df_id['Upload Month']==9) &(df_id['Upload Year']==report_year))
+im['oct']=sc((df_id['Upload Month']==10)&(df_id['Upload Year']==report_year))
+im['nov']=sc((df_id['Upload Month']==11)&(df_id['Upload Year']==report_year))
+im['dec']=sc((df_id['Upload Month']==12)&(df_id['Upload Year']==report_year))
+im['confirmed_this_month'] = sc((df_inst['Work Order Status']=='Confirmed') & (df_inst['Upload Month']==REPORT_DATE.month) & (df_inst['Upload Year']==REPORT_DATE.year))
+im['confirmed_today']      = sc((df_inst['Work Order Status']=='Confirmed') & (df_inst['Upload Date']==REPORT_DATE))
 im['kano_total']         =sc(df_id['Region']=='Kano')
 im['katsina_total']      =sc(df_id['Region']=='Katsina')
 im['jigawa_total']       =sc(df_id['Region']=='Jigawa')
@@ -167,7 +251,7 @@ im['installable_kano']   =sc(df_ia['Region']=='Kano')
 im['installable_katsina']=sc(df_ia['Region']=='Katsina')
 im['installable_jigawa'] =sc(df_ia['Region']=='Jigawa')
 im['total_installable']  =len(df_ia)
-im['total_kyc_upload'] = 80061
+
 
 # Total meters allocated
 im['total_allocated']    =len(df_inst)
@@ -212,18 +296,24 @@ df_sd=df_surv[df_surv['Work Order Status'].isin(DONE)]
 df_st=df_sd[df_sd['Update Date']==REPORT_DATE]
 df_sa=df_surv[df_surv['Work Order Status']=='Assigned']
 
+report_year = REPORT_DATE.year
 sm={}
 sm['done_so_far']        =len(df_sd)
 sm['confirmed']          =sc(df_surv['Work Order Status']=='Confirmed')
 sm['to_be_confirm']      =sc(df_surv['Work Order Status']=='To Be Confirmed')
 sm['rejected']           =sc(df_surv['Work Order Status']=='Rejected')
-sm['nov']=sc((df_sd['Update Month']==11)&(df_sd['Update Year']==2025))
-sm['dec']=sc((df_sd['Update Month']==12)&(df_sd['Update Year']==2025))
-sm['jan']=sc((df_sd['Update Month']==1) &(df_sd['Update Year']==2026))
-sm['feb']=sc((df_sd['Update Month']==2) &(df_sd['Update Year']==2026))
-sm['mar']=sc((df_sd['Update Month']==3) &(df_sd['Update Year']==2026))
-sm['apr']=sc((df_sd['Update Month']==4) &(df_sd['Update Year']==2026))
-sm['may']=sc((df_sd['Update Month']==5) &(df_sd['Update Year']==2026))
+sm['jan']=sc((df_sd['Update Month']==1) &(df_sd['Update Year']==report_year))
+sm['feb']=sc((df_sd['Update Month']==2) &(df_sd['Update Year']==report_year))
+sm['mar']=sc((df_sd['Update Month']==3) &(df_sd['Update Year']==report_year))
+sm['apr']=sc((df_sd['Update Month']==4) &(df_sd['Update Year']==report_year))
+sm['may']=sc((df_sd['Update Month']==5) &(df_sd['Update Year']==report_year))
+sm['june']=sc((df_sd['Update Month']==6) &(df_sd['Update Year']==report_year))
+sm['july']=sc((df_sd['Update Month']==7) &(df_sd['Update Year']==report_year))
+sm['aug']=sc((df_sd['Update Month']==8) &(df_sd['Update Year']==report_year))
+sm['sep']=sc((df_sd['Update Month']==9) &(df_sd['Update Year']==report_year))
+sm['oct']=sc((df_sd['Update Month']==10)&(df_sd['Update Year']==report_year))
+sm['nov']=sc((df_sd['Update Month']==11)&(df_sd['Update Year']==report_year))
+sm['dec']=sc((df_sd['Update Month']==12)&(df_sd['Update Year']==report_year))
 sm['kano_total']         =sc(df_sd['Region']=='Kano')
 sm['katsina_total']      =sc(df_sd['Region']=='Katsina')
 sm['jigawa_total']       =sc(df_sd['Region']=='Jigawa')
@@ -234,6 +324,7 @@ sm['today_jigawa']       =sc(df_st['Region']=='Jigawa')
 sm['assignable_kano']    =sc(df_sa['Region']=='Kano')
 sm['assignable_katsina'] =sc(df_sa['Region']=='Katsina')
 sm['assignable_jigawa']  =sc(df_sa['Region']=='Jigawa')
+sm['total_kyc_upload'] = 135120
 
 # Survey vs Installation gap
 sm['survey_inst_gap']=sm['done_so_far']-im['done_so_far']
@@ -331,6 +422,7 @@ sec_title(ws,f"D{R}:F{R}",f"D{R}","SURVEY BY REGION",bg=MB)
 ws.row_dimensions[R].height=18; R+=1
 
 survey_left=[
+    ("Total KYC Uploaded on FDM",           sm['total_kyc_upload']),
     ("Total Surveyed so far",    sm['done_so_far']),
     ("Survey Confirm on FDM",    sm['confirmed']),
     ("Survey yet To be Confirm", sm['to_be_confirm']),
@@ -340,6 +432,13 @@ survey_left=[
     ("Survey done in March",     sm['mar']),
     ("Survey done in April",     sm['apr']),
     ("Survey done in May",       sm['may']),
+    ("Survey done in June",      sm['june']),
+    ("Survey done in July",      sm['july']),
+    ("Survey done in August",    sm['aug']),
+    ("Survey done in September", sm['sep']),
+    ("Survey done in October",   sm['oct']),
+    ("Survey done in November",  sm['nov']),
+    ("Survey done in December",  sm['dec']),
     ("Survey done today",        sm['today_total']),
 ]
 survey_region=[
@@ -354,18 +453,23 @@ survey_region=[
     ("Survey done Today in Jigawa",           sm['today_jigawa']),
     ("Survey vs Install Gap",    sm['survey_inst_gap']),
 ]
-for i,(( lm,lv),(rm,rv)) in enumerate(zip(survey_left,survey_region)):
+max_survey_rows=max(len(survey_left),len(survey_region))
+for i in range(max_survey_rows):
     row=R+i; bg=GR if i%2==0 else WH
-    s(ws,f"A{row}",lm,bg=bg,align="left",sz=10)
-    s(ws,f"B{row}",lv,bg=LB,bold=True,nf="#,##0")
-    s(ws,f"D{row}",rm,bg=bg,align="left",sz=10)
-    gap_bg=LG if rv>=0 else LR
-    s(ws,f"E{row}",rm,bg=bg,align="left",sz=10)
-    s(ws,f"F{row}",rv,bg=gap_bg if rm=="Survey vs Install Gap" else LB,
-      bold=True,nf="#,##0")
+    if i<len(survey_left):
+        lm,lv=survey_left[i]
+        s(ws,f"A{row}",lm,bg=bg,align="left",sz=10)
+        s(ws,f"B{row}",lv,bg=LB,bold=True,nf="#,##0")
+    if i<len(survey_region):
+        rm,rv=survey_region[i]
+        s(ws,f"D{row}",rm,bg=bg,align="left",sz=10)
+        gap_bg=LG if rv>=0 else LR
+        s(ws,f"E{row}",rm,bg=bg,align="left",sz=10)
+        s(ws,f"F{row}",rv,bg=gap_bg if rm=="Survey vs Install Gap" else LB,
+          bold=True,nf="#,##0")
     ws.row_dimensions[row].height=17
 
-R+=len(survey_left)+1
+R+=max_survey_rows+1
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ROW 2: INSTALLATION (left) | INSTALL REGION (right)
@@ -375,7 +479,6 @@ sec_title(ws,f"D{R}:F{R}",f"D{R}","INSTALLATION BY REGION",bg=DG,fg=WH)
 ws.row_dimensions[R].height=18; R+=1
 
 install_left=[
-    ("Total KYC Uploaded on FDM",           im['total_kyc_upload']),
     ("Installation done so far",            im['done_so_far']),
     ("Confirmed on FDM",                    im['confirmed']),
     ("Installation yet To be Confirm",      im['to_be_confirm']),
@@ -385,6 +488,15 @@ install_left=[
     ("Installation done in March",          im['mar']),
     ("Installation done in April",          im['apr']),
     ("Installation done in May",            im['may']),
+    ("Installation done in June",           im['june']),
+    ("Installation done in July",           im['july']),
+    ("Installation done in August",         im['aug']),
+    ("Installation done in September",      im['sep']),
+    ("Installation done in October",        im['oct']),
+    ("Installation done in November",       im['nov']),
+    ("Installation done in December",       im['dec']),
+    ("Confirmed installation this month",   im['confirmed_this_month']),
+    ("Confirmed installation today",        im['confirmed_today']),
     ("Installation done today",             im['today_total']),
 ]
 install_region=[
